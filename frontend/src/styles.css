@@ -1,0 +1,289 @@
+:root {
+  color: #172033;
+  background: #f4f7f9;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  width: min(1280px, calc(100vw - 32px));
+  margin: 0 auto;
+  padding: 24px 0 36px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: clamp(26px, 3vw, 44px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.topbar p {
+  margin: 8px 0 0;
+  color: #56687d;
+  font-size: 15px;
+}
+
+.icon-button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #ccd6e0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #17324d;
+  cursor: pointer;
+}
+
+.score-band {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.metric,
+.panel {
+  border: 1px solid #d7e0e8;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(27, 45, 67, 0.06);
+}
+
+.metric {
+  min-height: 92px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.metric svg {
+  color: #0f766e;
+}
+
+.metric span {
+  color: #617084;
+  font-size: 13px;
+}
+
+.metric strong {
+  font-size: 25px;
+  letter-spacing: 0;
+}
+
+.hero-metric {
+  background: #102532;
+  color: #f8fbff;
+}
+
+.hero-metric span {
+  color: #b9c8d4;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1.35fr 0.9fr;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.panel {
+  padding: 18px;
+  min-width: 0;
+}
+
+.chart-panel {
+  min-height: 390px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: #425064;
+  font-size: 14px;
+}
+
+.panel-heading strong {
+  color: #132236;
+  font-size: 20px;
+}
+
+.chart-box {
+  height: 318px;
+}
+
+.ball-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.ball-row {
+  display: grid;
+  grid-template-columns: 82px 1fr 42px;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.bar {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5edf2;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #0f766e;
+}
+
+.reason-strip,
+.mini-metrics {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #526277;
+  font-size: 13px;
+}
+
+.mini-metrics {
+  justify-content: space-between;
+}
+
+.mini-metrics div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.summary {
+  margin: 0 0 15px;
+  color: #526277;
+  line-height: 1.5;
+}
+
+.reason-list {
+  display: grid;
+  gap: 12px;
+}
+
+.reason-item {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.reason-item strong {
+  display: block;
+  color: #132236;
+}
+
+.reason-item span {
+  display: block;
+  color: #526277;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.up {
+  color: #16a34a;
+}
+
+.down {
+  color: #dc2626;
+}
+
+.vote-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.vote-grid div {
+  min-height: 82px;
+  padding: 14px;
+  border: 1px solid #dce5ed;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.vote-grid span {
+  display: block;
+  color: #627084;
+  text-transform: capitalize;
+  font-size: 12px;
+}
+
+.vote-grid strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 24px;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 860px) {
+  .app-shell {
+    width: min(100% - 20px, 720px);
+    padding-top: 16px;
+  }
+
+  .score-band,
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .metric {
+    min-height: 78px;
+  }
+
+  .chart-panel {
+    min-height: 330px;
+  }
+
+  .chart-box {
+    height: 260px;
+  }
+
+  .vote-grid {
+    grid-template-columns: 1fr;
+  }
+}
