@@ -76,6 +76,14 @@ $env:DATABASE_URL="postgresql://cricket:cricket@localhost:5432/cricket"
 python scripts/ingest_data.py data/processed/ipl_deliveries.csv --format IPL
 ```
 
+Build model feature matrices with chronological train/test ordering:
+
+```powershell
+python scripts/build_features.py data/processed/ipl_deliveries.csv --output-dir data/features
+```
+
+This writes `X_train.csv`, `X_test.csv`, `y_train.csv`, `y_test.csv`, and `metadata.csv`.
+
 ## Blueprint Status
 
 The repo now contains the complete folder map from the PDF and a working vertical slice across Week 1-12 components. For a serious accuracy claim, train on full historical data with TimeSeriesSplit and log predictions against real results. The app is functional in demo mode immediately; real accuracy depends on downloaded datasets and trained model artifacts.

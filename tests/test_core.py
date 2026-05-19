@@ -5,6 +5,7 @@ from src.features.pressure_index import PressureInputs, pressure_index
 from src.models.monte_carlo import SimulationState, simulate_chase
 from src.db.database import database_health, initialize_schema
 from src.data.ingest import build_delivery_rows, build_match_rows, summarize_source
+from src.features.matrix import build_feature_frame, write_feature_matrices
 import pandas as pd
 
 
@@ -90,3 +91,40 @@ def test_ingestion_row_builders():
 
     assert build_match_rows(frame)[0]["team1"] == "CSK"
     assert build_delivery_rows(frame)[0]["batter"] == "R Sharma"
+
+
+def test_feature_matrix_builder(tmp_path):
+    rows = []
+    for innings in [1, 2]:
+        for ball in range(1, 7):
+            rows.append(
+                {
+                    "match_id": "m1",
+                    "innings": innings,
+                    "over": 0,
+                    "ball": ball,
+                    "batting_team": "MI" if innings == 1 else "CSK",
+                    "bowling_team": "CSK" if innings == 1 else "MI",
+                    "batter": "Batter",
+                    "bowler": "Bowler",
+                    "runs": 2 if innings == 1 else 1,
+                    "extras": 0,
+                    "is_wicket": 0,
+                    "venue": "Wankhede Stadium",
+                }
+            )
+    frame = pd.DataFrame(rows)
+
+    features, labels = build_feature_frame(frame)
+
+    assert len(features) == 12
+    assert "pressure_index" in features.columns
+    assert set(labels.unique()).issubset({0, 1})
+
+    csv_path = tmp_path / "deliveries.csv"
+    frame.to_csv(csv_path, index=False)
+    summary = write_feature_matrices(csv_path, tmp_path / "features", test_fraction=0.25)
+
+    assert summary.train_rows == 9
+    assert (tmp_path / "features" / "X_train.csv").exists()
+    assert (tmp_path / "features" / "y_test.csv").exists()
