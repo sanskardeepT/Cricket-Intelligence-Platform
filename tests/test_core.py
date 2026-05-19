@@ -7,6 +7,7 @@ from src.db.database import database_health, initialize_schema
 from src.data.ingest import build_delivery_rows, build_match_rows, summarize_source
 from src.features.matrix import build_feature_frame, write_feature_matrices
 from src.models.training import train_baselines
+from src.models.inference import load_artifact, predict_with_artifact
 import pandas as pd
 
 
@@ -165,3 +166,36 @@ def test_baseline_training_pipeline(tmp_path):
     assert summary.features > 0
     assert (tmp_path / "artifacts" / "win_probability_baseline.joblib").exists()
     assert (tmp_path / "artifacts" / "training_metrics.json").exists()
+
+
+def test_artifact_inference_pipeline(tmp_path):
+    rows = []
+    for match in range(8):
+        for innings in [1, 2]:
+            for ball in range(1, 7):
+                rows.append(
+                    {
+                        "match_id": f"m{match}",
+                        "innings": innings,
+                        "over": 0,
+                        "ball": ball,
+                        "batting_team": "MI" if innings == 1 else "CSK",
+                        "bowling_team": "CSK" if innings == 1 else "MI",
+                        "batter": "Batter",
+                        "bowler": "Bowler",
+                        "runs": 1 if innings == 1 else 2,
+                        "extras": 0,
+                        "is_wicket": 0,
+                        "venue": "Wankhede Stadium",
+                    }
+                )
+    csv_path = tmp_path / "deliveries.csv"
+    pd.DataFrame(rows).to_csv(csv_path, index=False)
+    write_feature_matrices(csv_path, tmp_path / "features", test_fraction=0.25)
+    summary = train_baselines(tmp_path / "features", tmp_path / "artifacts", folds=3)
+
+    load_artifact.cache_clear()
+    prediction = predict_with_artifact(LivePredictionRequest(), summary.artifact_path)
+
+    assert prediction is not None
+    assert 0 <= prediction.probability <= 1

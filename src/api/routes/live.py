@@ -10,6 +10,7 @@ from src.explainer.shap_explainer import fallback_reasons, net_explanation
 from src.features.match_features import MatchState, build_match_features
 from src.features.pressure_index import PressureInputs, pressure_index
 from src.models.ensemble import heuristic_live_prediction
+from src.models.inference import predict_with_artifact
 from src.models.monte_carlo import SimulationState, simulate_chase
 from src.db.database import PredictionLog, log_prediction
 
@@ -51,13 +52,34 @@ def build_live_payload(request: LivePredictionRequest) -> dict[str, object]:
         ),
         simulations=2500,
     )
-    prediction = heuristic_live_prediction(
+    heuristic_prediction = heuristic_live_prediction(
         elo_prior=float(features["elo_prior"]),
         monte_carlo_probability=float(mc["win_probability"]),
         pressure=pressure,
         required_run_rate=float(features["required_run_rate"]),
         current_run_rate=float(features["current_run_rate"]),
     )
+    artifact_prediction = predict_with_artifact(request)
+    if artifact_prediction:
+        model_votes = {
+            "trained_artifact": artifact_prediction.probability,
+            "heuristic": heuristic_prediction.probability,
+            "monte_carlo": round(float(mc["win_probability"]), 4),
+        }
+        prediction = {
+            "probability": artifact_prediction.probability,
+            "confidence": artifact_prediction.confidence,
+            "label": artifact_prediction.label,
+            "model_name": artifact_prediction.model_name,
+            "source": "trained_artifact",
+            "model_votes": model_votes,
+        }
+    else:
+        prediction = {
+            **heuristic_prediction.__dict__,
+            "model_name": "demo-heuristic-v1",
+            "source": "heuristic_fallback",
+        }
     explanation_features = {
         "elo_prior": float(features["elo_prior"]),
         "current_run_rate": float(features["current_run_rate"]),
@@ -65,15 +87,15 @@ def build_live_payload(request: LivePredictionRequest) -> dict[str, object]:
         "pressure": pressure,
         "balls_left": float(features["balls_left"]),
     }
-    reasons = fallback_reasons(explanation_features, prediction.probability)
+    reasons = fallback_reasons(explanation_features, float(prediction["probability"]))
     ball = predict_ball_outcome(pressure, request.batter_settle_score, request.bowler_fatigue)
     return {
         "match_state": features,
         "pressure_index": pressure,
-        "prediction": prediction.__dict__,
+        "prediction": prediction,
         "monte_carlo": mc,
         "ball_prediction": ball,
-        "explanation": net_explanation(prediction.probability, reasons),
+        "explanation": net_explanation(float(prediction["probability"]), reasons),
     }
 
 

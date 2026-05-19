@@ -92,6 +92,8 @@ python scripts/train_baseline.py --feature-dir data/features --artifact-dir arti
 
 The trainer uses `TimeSeriesSplit`, evaluates Logistic Regression and Random Forest, and saves the best local artifact to `artifacts/models/`.
 
+When `artifacts/models/win_probability_baseline.joblib` exists, `/live/predict` automatically uses it for live inference. Set `MODEL_ARTIFACT_PATH` to point at a different artifact.
+
 ## Blueprint Status
 
 The repo now contains the complete folder map from the PDF and a working vertical slice across Week 1-12 components. For a serious accuracy claim, train on full historical data with TimeSeriesSplit and log predictions against real results. The app is functional in demo mode immediately; real accuracy depends on downloaded datasets and trained model artifacts.
