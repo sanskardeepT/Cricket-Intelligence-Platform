@@ -6,6 +6,7 @@ from src.models.monte_carlo import SimulationState, simulate_chase
 from src.db.database import database_health, initialize_schema
 from src.data.ingest import build_delivery_rows, build_match_rows, summarize_source
 from src.features.matrix import build_feature_frame, write_feature_matrices
+from src.models.training import train_baselines
 import pandas as pd
 
 
@@ -128,3 +129,39 @@ def test_feature_matrix_builder(tmp_path):
     assert summary.train_rows == 9
     assert (tmp_path / "features" / "X_train.csv").exists()
     assert (tmp_path / "features" / "y_test.csv").exists()
+
+
+def test_baseline_training_pipeline(tmp_path):
+    rows = []
+    for match in range(8):
+        for innings in [1, 2]:
+            for ball in range(1, 7):
+                chasing_wins = match % 2 == 0
+                first_runs = 1 if chasing_wins else 2
+                second_runs = 2 if chasing_wins else 1
+                rows.append(
+                    {
+                        "match_id": f"m{match}",
+                        "innings": innings,
+                        "over": 0,
+                        "ball": ball,
+                        "batting_team": "MI" if innings == 1 else "CSK",
+                        "bowling_team": "CSK" if innings == 1 else "MI",
+                        "batter": "Batter",
+                        "bowler": "Bowler",
+                        "runs": first_runs if innings == 1 else second_runs,
+                        "extras": 0,
+                        "is_wicket": 0,
+                        "venue": "Wankhede Stadium",
+                    }
+                )
+    csv_path = tmp_path / "deliveries.csv"
+    pd.DataFrame(rows).to_csv(csv_path, index=False)
+    write_feature_matrices(csv_path, tmp_path / "features", test_fraction=0.25)
+
+    summary = train_baselines(tmp_path / "features", tmp_path / "artifacts", folds=3)
+
+    assert summary.best_model in {"logistic_regression", "random_forest"}
+    assert summary.features > 0
+    assert (tmp_path / "artifacts" / "win_probability_baseline.joblib").exists()
+    assert (tmp_path / "artifacts" / "training_metrics.json").exists()

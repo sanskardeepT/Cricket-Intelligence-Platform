@@ -84,6 +84,14 @@ python scripts/build_features.py data/processed/ipl_deliveries.csv --output-dir 
 
 This writes `X_train.csv`, `X_test.csv`, `y_train.csv`, `y_test.csv`, and `metadata.csv`.
 
+Train baseline win-probability models:
+
+```powershell
+python scripts/train_baseline.py --feature-dir data/features --artifact-dir artifacts/models
+```
+
+The trainer uses `TimeSeriesSplit`, evaluates Logistic Regression and Random Forest, and saves the best local artifact to `artifacts/models/`.
+
 ## Blueprint Status
 
 The repo now contains the complete folder map from the PDF and a working vertical slice across Week 1-12 components. For a serious accuracy claim, train on full historical data with TimeSeriesSplit and log predictions against real results. The app is functional in demo mode immediately; real accuracy depends on downloaded datasets and trained model artifacts.
