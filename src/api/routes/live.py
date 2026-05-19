@@ -11,6 +11,7 @@ from src.features.match_features import MatchState, build_match_features
 from src.features.pressure_index import PressureInputs, pressure_index
 from src.models.ensemble import heuristic_live_prediction
 from src.models.monte_carlo import SimulationState, simulate_chase
+from src.db.database import PredictionLog, log_prediction
 
 
 router = APIRouter(prefix="/live", tags=["live"])
@@ -80,7 +81,21 @@ def build_live_payload(request: LivePredictionRequest) -> dict[str, object]:
 def predict_live(request: LivePredictionRequest) -> dict[str, object]:
     """Return live win probability, next-ball forecast, and explanations."""
 
-    return build_live_payload(request)
+    payload = build_live_payload(request)
+    prediction = payload["prediction"]
+    pred_id = log_prediction(
+        PredictionLog(
+            pred_type="live_win_probability",
+            predicted_value=str(prediction["label"]),
+            confidence=float(prediction["confidence"]),
+            probability=float(prediction["probability"]),
+            match_id=None,
+            explanation=payload["explanation"],
+            feature_snapshot=payload["match_state"],
+        )
+    )
+    payload["prediction_id"] = pred_id
+    return payload
 
 
 @router.get("/demo")
@@ -88,4 +103,3 @@ def demo_live() -> dict[str, object]:
     """Return a realistic demo payload for the frontend."""
 
     return build_live_payload(LivePredictionRequest())
-

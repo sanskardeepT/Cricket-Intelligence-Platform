@@ -44,6 +44,19 @@ curl http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/live/demo
 ```
 
+## Database Setup
+
+The API runs without PostgreSQL for demo mode. For real prediction logging and training data storage, start PostgreSQL through Docker Compose:
+
+```powershell
+docker compose up -d postgres redis
+$env:DATABASE_URL="postgresql://cricket:cricket@localhost:5432/cricket"
+python scripts/init_db.py
+uvicorn src.api.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+The schema creates `matches`, `deliveries`, `players`, `player_match_stats`, `venues`, `live_match_state`, and `predictions`. Live prediction requests write to `predictions` when `DATABASE_URL` is configured.
+
 ## Real Data Flow
 
 ```python

@@ -3,6 +3,7 @@ from src.api.schemas import LivePredictionRequest
 from src.features.match_features import balls_bowled_from_overs, elo_win_probability
 from src.features.pressure_index import PressureInputs, pressure_index
 from src.models.monte_carlo import SimulationState, simulate_chase
+from src.db.database import database_health, initialize_schema
 
 
 def test_cricket_over_conversion():
@@ -29,3 +30,9 @@ def test_live_payload_shape():
     assert "prediction" in payload
     assert "ball_prediction" in payload
     assert "explanation" in payload
+
+
+def test_database_skips_without_url(monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    assert initialize_schema() is False
+    assert database_health()["status"] == "not_configured"
