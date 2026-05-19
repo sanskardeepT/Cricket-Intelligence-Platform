@@ -68,6 +68,14 @@ deliveries = load_cricsheet_zip(zip_path)
 save_processed_deliveries(deliveries, "data/processed/ipl_deliveries.csv")
 ```
 
+Validate and load data into PostgreSQL:
+
+```powershell
+python scripts/ingest_data.py data/processed/ipl_deliveries.csv --dry-run
+$env:DATABASE_URL="postgresql://cricket:cricket@localhost:5432/cricket"
+python scripts/ingest_data.py data/processed/ipl_deliveries.csv --format IPL
+```
+
 ## Blueprint Status
 
 The repo now contains the complete folder map from the PDF and a working vertical slice across Week 1-12 components. For a serious accuracy claim, train on full historical data with TimeSeriesSplit and log predictions against real results. The app is functional in demo mode immediately; real accuracy depends on downloaded datasets and trained model artifacts.

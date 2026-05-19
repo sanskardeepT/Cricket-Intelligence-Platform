@@ -33,7 +33,7 @@ def database_url() -> str | None:
     return os.getenv("DATABASE_URL")
 
 
-def _connect():
+def connect():
     """Create a psycopg connection or raise a clear runtime error."""
 
     url = database_url()
@@ -56,7 +56,7 @@ def initialize_schema() -> bool:
     if not database_url():
         return False
     schema = SCHEMA_PATH.read_text(encoding="utf-8")
-    with _connect() as conn:
+    with connect() as conn:
         with conn.cursor() as cursor:
             cursor.execute(schema)
         conn.commit()
@@ -69,7 +69,7 @@ def log_prediction(record: PredictionLog) -> str | None:
     if not database_url():
         return None
     pred_id = str(uuid4())
-    with _connect() as conn:
+    with connect() as conn:
         with conn.cursor() as cursor:
             cursor.execute(
                 """
@@ -101,11 +101,10 @@ def database_health() -> dict[str, str | bool]:
     if not database_url():
         return {"configured": False, "status": "not_configured"}
     try:
-        with _connect() as conn:
+        with connect() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT 1")
                 cursor.fetchone()
         return {"configured": True, "status": "ok"}
     except Exception as exc:  # pragma: no cover - depends on external service
         return {"configured": True, "status": f"error: {exc}"}
-
