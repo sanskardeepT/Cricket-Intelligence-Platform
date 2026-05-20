@@ -16,20 +16,28 @@ DELIVERY_COLUMN_ALIASES = {
 }
 
 
+def _derive_over_and_ball(ball_column: pd.Series) -> tuple[pd.Series, pd.Series]:
+    """Split Cricsheet ball notation like 15.2 into over=15 and ball=2."""
+
+    ball_as_float = pd.to_numeric(ball_column, errors="coerce")
+    if ball_as_float.isna().any():
+        raise ValueError("ball column contains values that cannot be parsed as cricket ball notation")
+    derived_over = ball_as_float.astype(int)
+    fractional = (ball_as_float - derived_over).round(1)
+    derived_ball = (fractional * 10).round().astype(int)
+    if not derived_ball.between(1, 6).all():
+        raise ValueError("ball notation must use legal ball values from .1 to .6")
+    return derived_over, derived_ball
+
+
 def _normalize_columns(frame: pd.DataFrame) -> pd.DataFrame:
     df = frame.rename(columns={k: v for k, v in DELIVERY_COLUMN_ALIASES.items() if k in frame.columns})
 
-    # Normalize Cricsheet-like `ball` notation.
-    # In your current IPL export, `ball` looks like 0.1, 0.2, ... 1.1, 1.2, ...
-    # i.e. it is {over}.{ball_in_over} where over is the integer part.
     if "over" not in df.columns:
         if "ball" in df.columns:
-            ball_as_float = pd.to_numeric(df["ball"], errors="coerce")
-            derived_over = ball_as_float.fillna(0).astype(int)
-            frac = (ball_as_float - derived_over).round(1)
-            derived_ball_in_over = (frac * 10).round().astype(int).clip(lower=1, upper=6)
-            df["over"] = derived_over
-            df["ball"] = derived_ball_in_over
+            df["over"], df["ball"] = _derive_over_and_ball(df["ball"])
+        else:
+            raise ValueError("missing required over/ball information")
 
     if "runs" not in df.columns:
         if {"batter_runs", "extras"}.issubset(df.columns):
@@ -54,31 +62,12 @@ def load_deliveries_csv(path: str | Path) -> pd.DataFrame:
         raise FileNotFoundError(source)
     df = pd.read_csv(source)
     df = _normalize_columns(df)
-    # Normalize Cricsheet-like `ball` notation.
-    # In many Cricsheet exports, `ball` is encoded like {over}.{ball_in_over} (e.g., 15.2).
-    # Our platform expects separate integer `over` and 1-6 `ball`.
-    if "over" not in df.columns:
-        if "ball" not in df.columns:
-            # Derive over + ball-in-over from Cricsheet's `ball` encoding.
-            # In your current IPL export, `ball` looks like 0.1, 0.2, ... 1.1, 1.2, ...
-            # i.e. it is {over}.{ball_in_over} where over is the integer part.
-            ball_as_float = pd.to_numeric(df["ball"], errors="coerce")
-            derived_over = ball_as_float.fillna(0).astype(int)
-            frac = (ball_as_float - derived_over).round(1)
-            # Map fractional part to ball-in-over: 0.1->1, 0.2->2, ..., 0.6->6
-            derived_ball_in_over = (frac * 10).round().astype(int).clip(lower=1, upper=6)
-            df["over"] = derived_over
-            df["ball"] = derived_ball_in_over
-        else:
-            raise ValueError(f"{source.name} is missing column 'over' and no fallback 'ball' exists")
-
 
     required = {"match_id", "over", "ball", "batting_team", "bowling_team", "runs"}
     missing = required - set(df.columns)
     if missing:
         raise ValueError(f"{source.name} is missing columns: {sorted(missing)}")
     return df
-
 
 
 def load_cricsheet_zip(zip_path: str | Path) -> pd.DataFrame:
@@ -109,4 +98,3 @@ def save_processed_deliveries(frame: pd.DataFrame, output_path: str | Path) -> P
     cleaned = _normalize_columns(frame)
     cleaned.to_csv(output, index=False)
     return output
-

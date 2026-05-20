@@ -8,6 +8,7 @@ from src.data.ingest import build_delivery_rows, build_match_rows, summarize_sou
 from src.features.matrix import build_feature_frame, write_feature_matrices
 from src.models.training import train_baselines
 from src.models.inference import load_artifact, predict_with_artifact
+from src.data.preprocessor import _normalize_columns
 import pandas as pd
 
 
@@ -70,6 +71,34 @@ def test_ingestion_summary_from_csv(tmp_path):
     assert summary.deliveries == 1
     assert summary.players == 2
     assert summary.venues == 1
+
+
+def test_preprocessor_derives_over_from_cricsheet_ball_notation():
+    frame = pd.DataFrame(
+        [
+            {"match_id": "m1", "ball": 0.1, "batting_team": "MI", "bowling_team": "CSK", "runs": 0},
+            {"match_id": "m1", "ball": 0.6, "batting_team": "MI", "bowling_team": "CSK", "runs": 1},
+            {"match_id": "m1", "ball": 15.2, "batting_team": "MI", "bowling_team": "CSK", "runs": 4},
+        ]
+    )
+
+    normalized = _normalize_columns(frame)
+
+    assert normalized["over"].tolist() == [0, 0, 15]
+    assert normalized["ball"].tolist() == [1, 6, 2]
+
+
+def test_preprocessor_rejects_illegal_ball_notation():
+    frame = pd.DataFrame(
+        [{"match_id": "m1", "ball": 2.8, "batting_team": "MI", "bowling_team": "CSK", "runs": 1}]
+    )
+
+    try:
+        _normalize_columns(frame)
+    except ValueError as exc:
+        assert "legal ball values" in str(exc)
+    else:
+        raise AssertionError("illegal ball notation should fail")
 
 
 def test_ingestion_row_builders():
