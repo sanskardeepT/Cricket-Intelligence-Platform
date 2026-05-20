@@ -88,17 +88,15 @@ def test_preprocessor_derives_over_from_cricsheet_ball_notation():
     assert normalized["ball"].tolist() == [1, 6, 2]
 
 
-def test_preprocessor_rejects_illegal_ball_notation():
+def test_preprocessor_preserves_extra_delivery_notation():
     frame = pd.DataFrame(
         [{"match_id": "m1", "ball": 2.8, "batting_team": "MI", "bowling_team": "CSK", "runs": 1}]
     )
 
-    try:
-        _normalize_columns(frame)
-    except ValueError as exc:
-        assert "legal ball values" in str(exc)
-    else:
-        raise AssertionError("illegal ball notation should fail")
+    normalized = _normalize_columns(frame)
+
+    assert normalized["over"].tolist() == [2]
+    assert normalized["ball"].tolist() == [8]
 
 
 def test_ingestion_row_builders():

@@ -113,7 +113,7 @@ def build_delivery_rows(deliveries: pd.DataFrame) -> list[dict[str, Any]]:
                 "match_id": str(row["match_id"]),
                 "innings": int(_first_existing(row, ["innings", "inning"], 1) or 1),
                 "over_number": int(float(row["over"])),
-                "ball_number": int(float(row["ball"])),
+                "ball_number": min(max(int(float(row["ball"])), 1), 6),
                 "batting_team": str(row["batting_team"]),
                 "bowling_team": str(row["bowling_team"]),
                 "batter": str(_first_existing(row, ["batter"], "Unknown Batter")),
@@ -238,4 +238,3 @@ def ingest_deliveries(path: str | Path, cricket_format: str = "IPL", dry_run: bo
         venues=len(venue_rows),
         dry_run=False,
     )
-

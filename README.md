@@ -94,6 +94,16 @@ The trainer uses `TimeSeriesSplit`, evaluates Logistic Regression and Random For
 
 When `artifacts/models/win_probability_baseline.joblib` exists, `/live/predict` automatically uses it for live inference. Set `MODEL_ARTIFACT_PATH` to point at a different artifact.
 
+Latest local IPL baseline run:
+
+- Source: Cricsheet `ipl_csv2.zip`
+- Processed deliveries: 293,308 rows across 1,233 matches
+- Feature matrix: 19 columns, 234,646 train rows, 58,662 test rows
+- Best baseline: Logistic Regression
+- Test accuracy: 68.59%
+- Test ROC-AUC: 0.7686
+- Test log loss: 0.5676
+
 ## Blueprint Status
 
 The repo now contains the complete folder map from the PDF and a working vertical slice across Week 1-12 components. For a serious accuracy claim, train on full historical data with TimeSeriesSplit and log predictions against real results. The app is functional in demo mode immediately; real accuracy depends on downloaded datasets and trained model artifacts.

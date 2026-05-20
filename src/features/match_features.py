@@ -95,7 +95,8 @@ def add_basic_delivery_features(deliveries: pd.DataFrame) -> pd.DataFrame:
         raise ValueError(f"deliveries is missing columns: {sorted(missing)}")
 
     df = deliveries.copy()
-    df["legal_ball_index"] = (df["over"].astype(int) * 6 + df["ball"].astype(int)).clip(lower=0)
+    legal_ball_in_over = df["ball"].astype(int).clip(lower=1, upper=6)
+    df["legal_ball_index"] = (df["over"].astype(int) * 6 + legal_ball_in_over).clip(lower=0)
     df["team_score"] = df.groupby(["match_id", "innings"])["runs"].cumsum()
     wicket_col = "is_wicket" if "is_wicket" in df.columns else None
     df["wickets_lost"] = df.groupby(["match_id", "innings"])[wicket_col].cumsum() if wicket_col else 0
@@ -129,4 +130,3 @@ def normalize_feature_mapping(values: Mapping[str, float]) -> dict[str, float]:
         number = float(value)
         clean[key] = 0.0 if not np.isfinite(number) else number
     return clean
-

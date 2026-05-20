@@ -17,7 +17,12 @@ DELIVERY_COLUMN_ALIASES = {
 
 
 def _derive_over_and_ball(ball_column: pd.Series) -> tuple[pd.Series, pd.Series]:
-    """Split Cricsheet ball notation like 15.2 into over=15 and ball=2."""
+    """Split Cricsheet ball notation like 15.2 into over=15 and delivery=2.
+
+    Cricsheet can encode extra deliveries as .7, .8, etc. after wides/no-balls.
+    We preserve that delivery sequence here; downstream feature code derives
+    legal-ball indices separately.
+    """
 
     ball_as_float = pd.to_numeric(ball_column, errors="coerce")
     if ball_as_float.isna().any():
@@ -25,8 +30,8 @@ def _derive_over_and_ball(ball_column: pd.Series) -> tuple[pd.Series, pd.Series]
     derived_over = ball_as_float.astype(int)
     fractional = (ball_as_float - derived_over).round(1)
     derived_ball = (fractional * 10).round().astype(int)
-    if not derived_ball.between(1, 6).all():
-        raise ValueError("ball notation must use legal ball values from .1 to .6")
+    if not (derived_ball >= 1).all():
+        raise ValueError("ball notation must use positive delivery values like .1, .2, ...")
     return derived_over, derived_ball
 
 
