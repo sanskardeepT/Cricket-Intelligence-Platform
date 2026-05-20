@@ -50,6 +50,10 @@ export default function App() {
     { over: "14", probability: 58 },
     { over: "15.2", probability: 61 },
   ]);
+
+  // Optional websocket live streaming.
+  const [useWebsocket, setUseWebsocket] = useState(true);
+
   const [loading, setLoading] = useState(false);
 
   async function refresh() {
@@ -59,11 +63,20 @@ export default function App() {
       if (!response.ok) throw new Error(`API returned ${response.status}`);
       const data = await response.json();
       setPayload(data);
+      const probPercent = Math.round((data.prediction?.probability ?? 0) * 100);
+      const overLabel = (() => {
+        const ballsBowled = data.match_state?.balls_bowled;
+        if (typeof ballsBowled !== "number" || !Number.isFinite(ballsBowled)) return "live";
+        const wholeOvers = Math.floor(ballsBowled / 6);
+        const ballsIntoOver = ballsBowled % 6;
+        const fractional = ballsIntoOver === 0 ? `${wholeOvers}` : `${wholeOvers}.${ballsIntoOver}`;
+        return fractional;
+      })();
       setHistory((items) => [
         ...items.slice(-7),
         {
-          over: String(data.match_state?.balls_bowled ? Math.floor(data.match_state.balls_bowled / 6) : "live"),
-          probability: Math.round(data.prediction.probability * 100),
+          over: String(overLabel),
+          probability: probPercent,
         },
       ]);
     } catch {
@@ -73,9 +86,74 @@ export default function App() {
     }
   }
 
+
   useEffect(() => {
-    refresh();
-  }, []);
+    if (!useWebsocket) {
+      refresh();
+      return;
+    }
+
+    const scheme = API_BASE.startsWith("https") ? "wss" : "ws";
+    const host = API_BASE.replace(/^https?:\/\//, "");
+    const wsUrl = `${scheme}://${host}/ws/live`;
+
+    let ws;
+    let cancelled = false;
+
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch {
+      refresh();
+      return;
+    }
+
+    ws.onopen = () => {
+      if (cancelled) return;
+    };
+
+    ws.onmessage = (event) => {
+      if (cancelled) return;
+      try {
+        const data = JSON.parse(event.data);
+        setPayload(data);
+        const probPercent = Math.round((data.prediction?.probability ?? 0) * 100);
+
+        const ballsBowled = data.match_state?.balls_bowled;
+        let overLabel = "live";
+        if (typeof ballsBowled === "number" && Number.isFinite(ballsBowled)) {
+          const wholeOvers = Math.floor(ballsBowled / 6);
+          const ballsIntoOver = ballsBowled % 6;
+          overLabel = ballsIntoOver === 0 ? `${wholeOvers}` : `${wholeOvers}.${ballsIntoOver}`;
+        }
+
+        setHistory((items) => [
+          ...items.slice(-7),
+          { over: String(overLabel), probability: probPercent },
+        ]);
+      } catch {
+        // ignore malformed messages
+      }
+    };
+
+    ws.onerror = () => {
+      if (cancelled) return;
+      refresh();
+    };
+
+    ws.onclose = () => {
+      if (cancelled) return;
+    };
+
+    return () => {
+      cancelled = true;
+      try {
+        ws?.close();
+      } catch {
+        // ignore
+      }
+    };
+  }, [useWebsocket]);
+
 
   const match = payload.match_state ?? fallbackPayload.match_state;
   const probability = payload.prediction?.probability ?? 0;
@@ -97,6 +175,7 @@ export default function App() {
         <button className="icon-button" onClick={refresh} title="Refresh live prediction" type="button">
           <RefreshCw size={19} className={loading ? "spin" : ""} />
         </button>
+
       </header>
 
       <section className="score-band">
