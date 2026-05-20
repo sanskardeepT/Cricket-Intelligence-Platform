@@ -1,0 +1,2 @@
+rows,train_rows,test_rows,features,test_fraction
+293308,234646,58662,19,0.2
