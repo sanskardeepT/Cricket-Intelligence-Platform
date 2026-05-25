@@ -111,7 +111,9 @@ Latest local IPL baseline run:
 - Test accuracy: 68.59%
 - Test ROC-AUC: 0.7686
 - Test log loss: 0.5676
-- Compared models: Logistic Regression, Random Forest, HistGradientBoosting
+- Compared models: Logistic Regression, Random Forest, HistGradientBoosting, XGBoost, LightGBM
+- XGBoost test accuracy: 67.84%, ROC-AUC: 0.7584
+- LightGBM test accuracy: 66.24%, ROC-AUC: 0.7371
 
 ## Blueprint Status
 

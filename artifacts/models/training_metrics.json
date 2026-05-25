@@ -30,6 +30,24 @@
       "test_roc_auc": 0.7491,
       "test_log_loss": 0.5979,
       "folds": 5
+    },
+    {
+      "name": "xgboost",
+      "cv_accuracy": 0.6685,
+      "cv_roc_auc": 0.7503,
+      "test_accuracy": 0.6784,
+      "test_roc_auc": 0.7584,
+      "test_log_loss": 0.5851,
+      "folds": 5
+    },
+    {
+      "name": "lightgbm",
+      "cv_accuracy": 0.6546,
+      "cv_roc_auc": 0.7252,
+      "test_accuracy": 0.6624,
+      "test_roc_auc": 0.7371,
+      "test_log_loss": 0.624,
+      "folds": 5
     }
   ]
 }
