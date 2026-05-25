@@ -34,6 +34,23 @@ FEATURE_COLUMNS = [
     "batting_team_code",
     "bowling_team_code",
     "venue_code",
+    "match_progress",
+    "wicket_pressure",
+    "run_rate_delta",
+    "target_pressure",
+    "batting_team_recent_rpb_180",
+    "bowling_team_recent_rpb_allowed_180",
+    "batting_team_recent_wicket_rate_180",
+    "bowling_team_recent_wicket_rate_180",
+    "batter_recent_rpb_60",
+    "batter_recent_boundary_rate_60",
+    "batter_recent_dismissal_rate_60",
+    "bowler_recent_rpb_allowed_60",
+    "bowler_recent_boundary_rate_allowed_60",
+    "bowler_recent_wicket_rate_60",
+    "venue_recent_rpb_240",
+    "venue_recent_boundary_rate_240",
+    "venue_recent_wicket_rate_240",
 ]
 
 
@@ -51,6 +68,23 @@ class FeatureBuildSummary:
 def _code_series(series: pd.Series) -> pd.Series:
     codes, _ = pd.factorize(series.fillna("unknown").astype(str), sort=True)
     return pd.Series(codes, index=series.index, dtype="int64")
+
+
+def _rolling_mean_by(
+    frame: pd.DataFrame,
+    group_cols: list[str],
+    value_col: str,
+    window: int,
+    default: float,
+) -> pd.Series:
+    """Previous-ball rolling mean for form features, excluding the current delivery."""
+
+    values = (
+        frame.groupby(group_cols, group_keys=False, sort=False)[value_col]
+        .apply(lambda series: series.shift(1).rolling(window=window, min_periods=1).mean())
+        .reindex(frame.index)
+    )
+    return values.fillna(default).astype(float)
 
 
 def _target_by_match(deliveries: pd.DataFrame) -> pd.Series:
@@ -137,6 +171,67 @@ def build_feature_frame(deliveries: pd.DataFrame) -> tuple[pd.DataFrame, pd.Seri
     df["bowling_team_code"] = _code_series(df["bowling_team"])
     venue_source = df["venue"] if "venue" in df.columns else pd.Series("unknown", index=df.index)
     df["venue_code"] = _code_series(venue_source)
+    df["boundary"] = df["runs"].isin([4, 6]).astype(int)
+    global_rpb = float(df["runs"].mean()) if len(df) else 0.0
+    global_boundary_rate = float(df["boundary"].mean()) if len(df) else 0.0
+    global_wicket_rate = float(df["is_wicket"].mean()) if len(df) else 0.0
+
+    df["match_progress"] = (df["legal_ball_index"].clip(lower=0, upper=120) / 120).astype(float)
+    df["wicket_pressure"] = (df["wickets_lost"].clip(lower=0, upper=10) / 10).astype(float)
+    df["run_rate_delta"] = np.where(
+        df["innings"] == 2,
+        df["required_run_rate"] - df["current_run_rate"],
+        0.0,
+    )
+    df["target_pressure"] = np.where(
+        (df["innings"] == 2) & (df["target"] > 0),
+        df["runs_needed"] / df["target"],
+        0.0,
+    )
+    df["batting_team_recent_rpb_180"] = _rolling_mean_by(df, ["batting_team"], "runs", 180, global_rpb)
+    df["bowling_team_recent_rpb_allowed_180"] = _rolling_mean_by(df, ["bowling_team"], "runs", 180, global_rpb)
+    df["batting_team_recent_wicket_rate_180"] = _rolling_mean_by(
+        df, ["batting_team"], "is_wicket", 180, global_wicket_rate
+    )
+    df["bowling_team_recent_wicket_rate_180"] = _rolling_mean_by(
+        df, ["bowling_team"], "is_wicket", 180, global_wicket_rate
+    )
+    if "batter" in df.columns:
+        df["batter_recent_rpb_60"] = _rolling_mean_by(df, ["batter"], "runs", 60, global_rpb)
+        df["batter_recent_boundary_rate_60"] = _rolling_mean_by(
+            df, ["batter"], "boundary", 60, global_boundary_rate
+        )
+        df["batter_recent_dismissal_rate_60"] = _rolling_mean_by(
+            df, ["batter"], "is_wicket", 60, global_wicket_rate
+        )
+    else:
+        df["batter_recent_rpb_60"] = global_rpb
+        df["batter_recent_boundary_rate_60"] = global_boundary_rate
+        df["batter_recent_dismissal_rate_60"] = global_wicket_rate
+    if "bowler" in df.columns:
+        df["bowler_recent_rpb_allowed_60"] = _rolling_mean_by(df, ["bowler"], "runs", 60, global_rpb)
+        df["bowler_recent_boundary_rate_allowed_60"] = _rolling_mean_by(
+            df, ["bowler"], "boundary", 60, global_boundary_rate
+        )
+        df["bowler_recent_wicket_rate_60"] = _rolling_mean_by(
+            df, ["bowler"], "is_wicket", 60, global_wicket_rate
+        )
+    else:
+        df["bowler_recent_rpb_allowed_60"] = global_rpb
+        df["bowler_recent_boundary_rate_allowed_60"] = global_boundary_rate
+        df["bowler_recent_wicket_rate_60"] = global_wicket_rate
+    if "venue" in df.columns:
+        df["venue_recent_rpb_240"] = _rolling_mean_by(df, ["venue"], "runs", 240, global_rpb)
+        df["venue_recent_boundary_rate_240"] = _rolling_mean_by(
+            df, ["venue"], "boundary", 240, global_boundary_rate
+        )
+        df["venue_recent_wicket_rate_240"] = _rolling_mean_by(
+            df, ["venue"], "is_wicket", 240, global_wicket_rate
+        )
+    else:
+        df["venue_recent_rpb_240"] = global_rpb
+        df["venue_recent_boundary_rate_240"] = global_boundary_rate
+        df["venue_recent_wicket_rate_240"] = global_wicket_rate
 
     features = df[FEATURE_COLUMNS].replace([np.inf, -np.inf], 0).fillna(0)
     labels = _winner_label(df)
@@ -187,4 +282,3 @@ def write_feature_matrices(
         features=len(FEATURE_COLUMNS),
         output_dir=str(output),
     )
-

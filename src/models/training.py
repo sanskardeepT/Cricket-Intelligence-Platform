@@ -199,6 +199,7 @@ def train_baselines(
             "model": fitted_models[best.name],
             "model_name": best.name,
             "feature_columns": list(x_train.columns),
+            "feature_defaults": x_train.mean(numeric_only=True).to_dict(),
             "metrics": asdict(best),
         },
         artifact_path,

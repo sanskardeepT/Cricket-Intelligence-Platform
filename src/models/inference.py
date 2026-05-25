@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import os
 from dataclasses import dataclass
 from functools import lru_cache
@@ -30,11 +29,6 @@ class ArtifactPrediction:
     model_name: str
 
 
-def _stable_code(value: str, modulo: int = 10_000) -> int:
-    digest = hashlib.sha1(value.strip().lower().encode("utf-8")).hexdigest()
-    return int(digest[:8], 16) % modulo
-
-
 def artifact_path() -> Path:
     """Return configured model artifact path."""
 
@@ -54,7 +48,11 @@ def load_artifact(path: str | None = None) -> dict[str, Any] | None:
     return payload
 
 
-def live_feature_row(request: LivePredictionRequest, feature_columns: list[str]) -> pd.DataFrame:
+def live_feature_row(
+    request: LivePredictionRequest,
+    feature_columns: list[str],
+    feature_defaults: dict[str, float] | None = None,
+) -> pd.DataFrame:
     """Adapt a live API request into the trained feature-column layout."""
 
     balls_bowled = balls_bowled_from_overs(request.overs)
@@ -88,11 +86,13 @@ def live_feature_row(request: LivePredictionRequest, feature_columns: list[str])
         "is_powerplay": float(over < 6),
         "is_middle_overs": float(6 <= over < 15),
         "is_death_overs": float(over >= 15),
-        "batting_team_code": float(_stable_code(request.batting_team)),
-        "bowling_team_code": float(_stable_code(request.bowling_team)),
-        "venue_code": float(_stable_code(request.venue)),
+        "match_progress": float(min(max(balls_bowled, 0), 120) / 120),
+        "wicket_pressure": float(min(max(request.wickets, 0), 10) / 10),
+        "run_rate_delta": float(rrr - crr),
+        "target_pressure": float(runs_needed / request.target) if request.target > 0 else 0.0,
     }
-    return pd.DataFrame([{column: values.get(column, 0.0) for column in feature_columns}])
+    defaults = feature_defaults or {}
+    return pd.DataFrame([{column: values.get(column, float(defaults.get(column, 0.0))) for column in feature_columns}])
 
 
 def predict_with_artifact(request: LivePredictionRequest, path: str | None = None) -> ArtifactPrediction | None:
@@ -102,7 +102,8 @@ def predict_with_artifact(request: LivePredictionRequest, path: str | None = Non
     if payload is None:
         return None
     feature_columns = list(payload["feature_columns"])
-    row = live_feature_row(request, feature_columns)
+    defaults = payload.get("feature_defaults", {})
+    row = live_feature_row(request, feature_columns, defaults if isinstance(defaults, dict) else None)
     probability = float(payload["model"].predict_proba(row)[:, 1][0])
     probability = round(max(0.02, min(0.98, probability)), 4)
     return ArtifactPrediction(
@@ -111,4 +112,3 @@ def predict_with_artifact(request: LivePredictionRequest, path: str | None = Non
         label="win" if probability >= 0.5 else "loss",
         model_name=str(payload.get("model_name", "trained_artifact")),
     )
-

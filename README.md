@@ -106,14 +106,14 @@ Latest local IPL baseline run:
 
 - Source: Cricsheet `ipl_csv2.zip`
 - Processed deliveries: 293,308 rows across 1,233 matches
-- Feature matrix: 19 columns, 234,646 train rows, 58,662 test rows
+- Feature matrix: 36 columns, 234,646 train rows, 58,662 test rows
 - Best baseline: Logistic Regression
-- Test accuracy: 68.59%
-- Test ROC-AUC: 0.7686
-- Test log loss: 0.5676
+- Test accuracy: 68.26%
+- Test ROC-AUC: 0.7673
+- Test log loss: 0.5714
 - Compared models: Logistic Regression, Random Forest, HistGradientBoosting, XGBoost, LightGBM
-- XGBoost test accuracy: 67.84%, ROC-AUC: 0.7584
-- LightGBM test accuracy: 66.24%, ROC-AUC: 0.7371
+- XGBoost test accuracy: 67.96%, ROC-AUC: 0.7599
+- LightGBM test accuracy: 67.33%, ROC-AUC: 0.7526
 
 ## Blueprint Status
 
