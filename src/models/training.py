@@ -66,6 +66,15 @@ def load_feature_matrices(feature_dir: str | Path) -> tuple[pd.DataFrame, pd.Ser
     return x_train, y_train, x_test, y_test
 
 
+def load_feature_metadata(feature_dir: str | Path) -> dict[str, Any]:
+    """Load optional feature build metadata such as category maps."""
+
+    path = Path(feature_dir) / "feature_metadata.json"
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def candidate_models() -> dict[str, Any]:
     """Return available classifiers for win-probability training."""
 
@@ -166,6 +175,7 @@ def train_baselines(
     """Train baseline win-probability models and persist the best one."""
 
     x_train, y_train, x_test, y_test = load_feature_matrices(feature_dir)
+    feature_metadata = load_feature_metadata(feature_dir)
     models = candidate_models()
     metrics: list[ModelMetrics] = []
     fitted_models: dict[str, Any] = {}
@@ -200,6 +210,7 @@ def train_baselines(
             "model_name": best.name,
             "feature_columns": list(x_train.columns),
             "feature_defaults": x_train.mean(numeric_only=True).to_dict(),
+            "category_maps": feature_metadata.get("category_maps", {}),
             "metrics": asdict(best),
         },
         artifact_path,

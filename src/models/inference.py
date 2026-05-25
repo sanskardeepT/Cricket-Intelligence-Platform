@@ -52,6 +52,7 @@ def live_feature_row(
     request: LivePredictionRequest,
     feature_columns: list[str],
     feature_defaults: dict[str, float] | None = None,
+    category_maps: dict[str, dict[str, int]] | None = None,
 ) -> pd.DataFrame:
     """Adapt a live API request into the trained feature-column layout."""
 
@@ -91,6 +92,16 @@ def live_feature_row(
         "run_rate_delta": float(rrr - crr),
         "target_pressure": float(runs_needed / request.target) if request.target > 0 else 0.0,
     }
+    categories = category_maps or {}
+    category_inputs = {
+        "batting_team_code": request.batting_team,
+        "bowling_team_code": request.bowling_team,
+        "venue_code": request.venue,
+    }
+    for feature_name, raw_value in category_inputs.items():
+        mapping = categories.get(feature_name, {})
+        if raw_value in mapping:
+            values[feature_name] = float(mapping[raw_value])
     defaults = feature_defaults or {}
     return pd.DataFrame([{column: values.get(column, float(defaults.get(column, 0.0))) for column in feature_columns}])
 
@@ -103,7 +114,13 @@ def predict_with_artifact(request: LivePredictionRequest, path: str | None = Non
         return None
     feature_columns = list(payload["feature_columns"])
     defaults = payload.get("feature_defaults", {})
-    row = live_feature_row(request, feature_columns, defaults if isinstance(defaults, dict) else None)
+    category_maps = payload.get("category_maps", {})
+    row = live_feature_row(
+        request,
+        feature_columns,
+        defaults if isinstance(defaults, dict) else None,
+        category_maps if isinstance(category_maps, dict) else None,
+    )
     probability = float(payload["model"].predict_proba(row)[:, 1][0])
     probability = round(max(0.02, min(0.98, probability)), 4)
     return ArtifactPrediction(

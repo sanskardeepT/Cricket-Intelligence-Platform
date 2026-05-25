@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -68,6 +69,11 @@ class FeatureBuildSummary:
 def _code_series(series: pd.Series) -> pd.Series:
     codes, _ = pd.factorize(series.fillna("unknown").astype(str), sort=True)
     return pd.Series(codes, index=series.index, dtype="int64")
+
+
+def _code_map(series: pd.Series) -> dict[str, int]:
+    values = sorted(series.fillna("unknown").astype(str).unique())
+    return {value: code for code, value in enumerate(values)}
 
 
 def _rolling_mean_by(
@@ -262,6 +268,15 @@ def write_feature_matrices(
     features.iloc[split_index:].to_csv(output / "X_test.csv", index=False)
     labels.iloc[:split_index].rename("win_label").to_csv(output / "y_train.csv", index=False)
     labels.iloc[split_index:].rename("win_label").to_csv(output / "y_test.csv", index=False)
+    metadata_payload = {
+        "feature_columns": FEATURE_COLUMNS,
+        "category_maps": {
+            "batting_team_code": _code_map(deliveries["batting_team"]),
+            "bowling_team_code": _code_map(deliveries["bowling_team"]),
+            "venue_code": _code_map(deliveries["venue"] if "venue" in deliveries.columns else pd.Series("unknown")),
+        },
+    }
+    (output / "feature_metadata.json").write_text(json.dumps(metadata_payload, indent=2), encoding="utf-8")
 
     metadata = pd.DataFrame(
         [
