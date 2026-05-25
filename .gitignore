@@ -21,3 +21,4 @@ artifacts/
 !artifacts/models/
 !artifacts/models/.gitkeep
 kaggle/cricket-intelligence-platform-ipl-artifacts/
+kaggle/downloaded-artifacts/

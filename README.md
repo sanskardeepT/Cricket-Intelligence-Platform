@@ -84,6 +84,19 @@ python scripts/build_features.py data/processed/ipl_deliveries.csv --output-dir 
 
 This writes `X_train.csv`, `X_test.csv`, `y_train.csv`, `y_test.csv`, and `metadata.csv`.
 
+Generated data and model artifacts are intentionally ignored by Git. To publish the local artifacts to Kaggle:
+
+```powershell
+python scripts/prepare_kaggle_dataset.py
+kaggle datasets create -p kaggle/cricket-intelligence-platform-ipl-artifacts
+```
+
+To restore artifacts from Kaggle on another machine after the dataset exists:
+
+```powershell
+python scripts/download_kaggle_artifacts.py
+```
+
 Train baseline win-probability models:
 
 ```powershell
