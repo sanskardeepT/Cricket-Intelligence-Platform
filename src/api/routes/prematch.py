@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from src.api.schemas import PrematchRequest, TossRequest
 from src.explainer.toss_explainer import explain_toss_decision
 from src.features.match_features import elo_win_probability
+from src.models.toss_model import predict_toss_with_artifact
 
 
 router = APIRouter(prefix="/prematch", tags=["prematch"])
@@ -36,12 +37,11 @@ def predict_prematch(request: PrematchRequest) -> dict[str, object]:
 
 @router.post("/toss")
 def predict_toss(request: TossRequest) -> dict[str, object]:
-    """Predict toss decision with blueprint weights."""
+    """Predict toss decision with trained artifact and blueprint fallback."""
 
-    return explain_toss_decision(
+    return predict_toss_with_artifact(request) or explain_toss_decision(
         venue_dew_factor=request.venue_dew_factor,
         pitch_deterioration=request.pitch_deterioration,
         captain_field_tendency=request.captain_field_tendency,
         chase_success_rate=request.chase_success_rate,
     )
-

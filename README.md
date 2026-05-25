@@ -125,6 +125,16 @@ Latest local IPL next-ball outcome run:
 - Test log loss: 1.4879
 - Compared models: Logistic Regression, HistGradientBoosting, Random Forest
 
+Latest local IPL toss-decision run:
+
+- Source: Cricsheet `ipl_csv2.zip` match-info files
+- Matches: 1,233 IPL matches, 986 train rows, 247 test rows
+- Feature matrix: 7 toss/venue/captain prior columns
+- Best baseline: HistGradientBoosting
+- Test accuracy: 76.92%
+- Test log loss: 0.7069
+- Compared models: Logistic Regression, HistGradientBoosting, Random Forest
+
 ## Blueprint Status
 
 The repo now contains the complete folder map from the PDF and a working vertical slice across Week 1-12 components. For a serious accuracy claim, train on full historical data with TimeSeriesSplit and log predictions against real results. The app is functional in demo mode immediately; real accuracy depends on downloaded datasets and trained model artifacts.

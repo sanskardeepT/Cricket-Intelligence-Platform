@@ -24,6 +24,8 @@ class LivePredictionRequest(BaseModel):
 class TossRequest(BaseModel):
     """Toss predictor request."""
 
+    venue: str = "Wankhede Stadium"
+    toss_winner: str = "MI"
     venue_dew_factor: float = Field(default=78, ge=0, le=100)
     pitch_deterioration: float = Field(default=38, ge=0, le=100)
     captain_field_tendency: float = Field(default=67, ge=0, le=100)
