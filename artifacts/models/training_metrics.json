@@ -21,6 +21,15 @@
       "test_roc_auc": 0.7342,
       "test_log_loss": 0.6516,
       "folds": 5
+    },
+    {
+      "name": "hist_gradient_boosting",
+      "cv_accuracy": 0.66,
+      "cv_roc_auc": 0.7375,
+      "test_accuracy": 0.6709,
+      "test_roc_auc": 0.7491,
+      "test_log_loss": 0.5979,
+      "folds": 5
     }
   ]
 }

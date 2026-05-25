@@ -90,7 +90,7 @@ Train baseline win-probability models:
 python scripts/train_baseline.py --feature-dir data/features --artifact-dir artifacts/models
 ```
 
-The trainer uses `TimeSeriesSplit`, evaluates Logistic Regression and Random Forest, and saves the best local artifact to `artifacts/models/`.
+The trainer uses `TimeSeriesSplit`, evaluates Logistic Regression, Random Forest, native Gradient Boosting, and optional XGBoost/LightGBM when installed, then saves the best local artifact to `artifacts/models/`.
 
 When `artifacts/models/win_probability_baseline.joblib` exists, `/live/predict` automatically uses it for live inference. Set `MODEL_ARTIFACT_PATH` to point at a different artifact.
 
@@ -111,6 +111,7 @@ Latest local IPL baseline run:
 - Test accuracy: 68.59%
 - Test ROC-AUC: 0.7686
 - Test log loss: 0.5676
+- Compared models: Logistic Regression, Random Forest, HistGradientBoosting
 
 ## Blueprint Status
 

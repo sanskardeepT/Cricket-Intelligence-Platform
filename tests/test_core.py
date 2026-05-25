@@ -192,7 +192,7 @@ def test_baseline_training_pipeline(tmp_path):
 
     summary = train_baselines(tmp_path / "features", tmp_path / "artifacts", folds=3)
 
-    assert summary.best_model in {"logistic_regression", "random_forest"}
+    assert summary.best_model in {"logistic_regression", "random_forest", "hist_gradient_boosting", "xgboost", "lightgbm"}
     assert summary.features > 0
     assert (tmp_path / "artifacts" / "win_probability_baseline.joblib").exists()
     assert (tmp_path / "artifacts" / "training_metrics.json").exists()

@@ -8,7 +8,7 @@ from src.models.training import train_baselines
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Train Cricket Intelligence baseline models")
+    parser = argparse.ArgumentParser(description="Train Cricket Intelligence win-probability models")
     parser.add_argument("--feature-dir", default="data/features", help="Directory containing X/y train-test CSVs")
     parser.add_argument("--artifact-dir", default="artifacts/models", help="Directory for model artifact and metrics")
     parser.add_argument("--folds", type=int, default=5, help="TimeSeriesSplit folds")

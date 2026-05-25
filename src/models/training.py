@@ -10,7 +10,7 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, log_loss, roc_auc_score
 from sklearn.model_selection import TimeSeriesSplit
@@ -67,9 +67,9 @@ def load_feature_matrices(feature_dir: str | Path) -> tuple[pd.DataFrame, pd.Ser
 
 
 def candidate_models() -> dict[str, Any]:
-    """Return baseline classifiers that work with the default requirements."""
+    """Return available classifiers for win-probability training."""
 
-    return {
+    models: dict[str, Any] = {
         "logistic_regression": Pipeline(
             steps=[
                 ("scaler", StandardScaler()),
@@ -83,7 +83,42 @@ def candidate_models() -> dict[str, Any]:
             random_state=42,
             n_jobs=-1,
         ),
+        "hist_gradient_boosting": HistGradientBoostingClassifier(
+            max_iter=120,
+            learning_rate=0.06,
+            max_leaf_nodes=31,
+            l2_regularization=0.05,
+            random_state=42,
+        ),
     }
+    try:
+        from xgboost import XGBClassifier
+
+        models["xgboost"] = XGBClassifier(
+            n_estimators=220,
+            max_depth=4,
+            learning_rate=0.045,
+            subsample=0.9,
+            colsample_bytree=0.9,
+            eval_metric="logloss",
+            random_state=42,
+            n_jobs=-1,
+        )
+    except ImportError:
+        pass
+    try:
+        from lightgbm import LGBMClassifier
+
+        models["lightgbm"] = LGBMClassifier(
+            n_estimators=260,
+            learning_rate=0.04,
+            num_leaves=31,
+            random_state=42,
+            verbose=-1,
+        )
+    except ImportError:
+        pass
+    return models
 
 
 def _safe_roc_auc(y_true: pd.Series, probabilities: np.ndarray) -> float:
@@ -190,4 +225,3 @@ def train_baselines(
         test_rows=len(x_test),
         features=len(x_train.columns),
     )
-
