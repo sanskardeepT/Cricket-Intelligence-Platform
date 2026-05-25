@@ -26,11 +26,11 @@ export default function BallPredictor({ ball }) {
       <div className="mini-metrics">
         <div>
           <Target size={17} />
-          <span>Outcome Model</span>
+          <span>{ball?.model_name ?? "Outcome Model"}</span>
         </div>
         <div>
           <CircleDot size={17} />
-          <span>Ball-by-ball</span>
+          <span>{ball?.source ?? "Ball-by-ball"}</span>
         </div>
       </div>
     </section>

@@ -115,6 +115,16 @@ Latest local IPL baseline run:
 - XGBoost test accuracy: 67.96%, ROC-AUC: 0.7599
 - LightGBM test accuracy: 67.33%, ROC-AUC: 0.7526
 
+Latest local IPL next-ball outcome run:
+
+- Source: Cricsheet `ipl_csv2.zip`
+- Outcome classes: Dot ball, Single, Two runs, Four, Six, Wicket, Other runs
+- Feature matrix: 20 pre-ball columns, 234,646 train rows, 58,662 test rows
+- Best baseline: HistGradientBoosting
+- Test accuracy: 43.76%
+- Test log loss: 1.4879
+- Compared models: Logistic Regression, HistGradientBoosting, Random Forest
+
 ## Blueprint Status
 
 The repo now contains the complete folder map from the PDF and a working vertical slice across Week 1-12 components. For a serious accuracy claim, train on full historical data with TimeSeriesSplit and log predictions against real results. The app is functional in demo mode immediately; real accuracy depends on downloaded datasets and trained model artifacts.

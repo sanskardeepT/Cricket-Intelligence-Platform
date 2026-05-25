@@ -1,0 +1,35 @@
+{
+  "best_model": "hist_gradient_boosting",
+  "train_rows": 234646,
+  "test_rows": 58662,
+  "features": 20,
+  "outcomes": [
+    "Dot ball",
+    "Single",
+    "Two runs",
+    "Four",
+    "Six",
+    "Wicket",
+    "Other runs"
+  ],
+  "metrics": [
+    {
+      "name": "logistic_regression",
+      "cv_accuracy": 0.19,
+      "test_accuracy": 0.1635,
+      "test_log_loss": 1.9436
+    },
+    {
+      "name": "hist_gradient_boosting",
+      "cv_accuracy": 0.4497,
+      "test_accuracy": 0.4376,
+      "test_log_loss": 1.4879
+    },
+    {
+      "name": "random_forest",
+      "cv_accuracy": 0.3897,
+      "test_accuracy": 0.3763,
+      "test_log_loss": 1.6485
+    }
+  ]
+}
