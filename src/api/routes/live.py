@@ -11,7 +11,7 @@ from src.features.match_features import MatchState, build_match_features
 from src.features.pressure_index import PressureInputs, pressure_index
 from src.models.ensemble import heuristic_live_prediction
 from src.models.ball_outcome import predict_next_ball_with_artifact
-from src.models.inference import predict_with_artifact
+from src.models.inference import artifact_feature_reasons, predict_with_artifact
 from src.models.monte_carlo import SimulationState, simulate_chase
 from src.db.database import PredictionLog, log_prediction
 
@@ -88,7 +88,9 @@ def build_live_payload(request: LivePredictionRequest) -> dict[str, object]:
         "pressure": pressure,
         "balls_left": float(features["balls_left"]),
     }
-    reasons = fallback_reasons(explanation_features, float(prediction["probability"]))
+    reasons = artifact_feature_reasons(request) if artifact_prediction else []
+    if not reasons:
+        reasons = fallback_reasons(explanation_features, float(prediction["probability"]))
     ball = predict_next_ball_with_artifact(request) or predict_ball_outcome(
         pressure, request.batter_settle_score, request.bowler_fatigue
     )

@@ -9,9 +9,11 @@ from pathlib import Path
 from typing import Any
 
 import joblib
+import numpy as np
 import pandas as pd
 
 from src.api.schemas import LivePredictionRequest
+from src.explainer.shap_explainer import Reason
 from src.features.match_features import balls_bowled_from_overs, current_run_rate, required_run_rate
 from src.features.pressure_index import PressureInputs, pressure_index
 
@@ -27,6 +29,29 @@ class ArtifactPrediction:
     confidence: float
     label: str
     model_name: str
+
+
+FEATURE_DESCRIPTIONS = {
+    "innings": "Chase context is influencing the trained model.",
+    "over": "Current over is influencing the trained model.",
+    "ball": "Current ball within the over is influencing the trained model.",
+    "legal_ball_index": "Balls already bowled are influencing the trained model.",
+    "team_score": "Current score level is changing the trained win probability.",
+    "wickets_lost": "Wickets lost are changing the trained win probability.",
+    "balls_left": "Remaining balls are changing the trained win probability.",
+    "current_run_rate": "Current run rate is a major trained-model driver.",
+    "required_run_rate": "Required run rate is a major trained-model driver.",
+    "runs_needed": "Runs still needed are shaping the chase probability.",
+    "pressure_index": "Pressure index is influencing the trained model.",
+    "recent_runs_6": "Recent scoring tempo is influencing this forecast.",
+    "recent_wickets_12": "Recent wickets are influencing this forecast.",
+    "match_progress": "Match progress is changing the model's confidence.",
+    "wicket_pressure": "Wicket pressure is changing the model's confidence.",
+    "run_rate_delta": "Gap between required and current rate is a key driver.",
+    "target_pressure": "Target pressure is influencing this forecast.",
+}
+
+LOW_SIGNAL_EXPLANATION_FEATURES = {"batting_team_code", "bowling_team_code", "venue_code"}
 
 
 def artifact_path() -> Path:
@@ -129,3 +154,55 @@ def predict_with_artifact(request: LivePredictionRequest, path: str | None = Non
         label="win" if probability >= 0.5 else "loss",
         model_name=str(payload.get("model_name", "trained_artifact")),
     )
+
+
+def artifact_feature_reasons(request: LivePredictionRequest, path: str | None = None, top_n: int = 5) -> list[Reason]:
+    """Explain a trained artifact prediction with model-native feature drivers."""
+
+    payload = load_artifact(path)
+    if payload is None:
+        return []
+    feature_columns = list(payload["feature_columns"])
+    defaults = payload.get("feature_defaults", {})
+    category_maps = payload.get("category_maps", {})
+    row = live_feature_row(
+        request,
+        feature_columns,
+        defaults if isinstance(defaults, dict) else None,
+        category_maps if isinstance(category_maps, dict) else None,
+    )
+    default_row = pd.DataFrame(
+        [{column: float(defaults.get(column, 0.0)) if isinstance(defaults, dict) else 0.0 for column in feature_columns}]
+    )
+    model = payload["model"]
+    estimator = model
+    row_values = row.to_numpy(dtype=float)[0]
+    default_values = default_row.to_numpy(dtype=float)[0]
+
+    if hasattr(model, "named_steps"):
+        estimator = model.named_steps.get("model", model)
+        scaler = model.named_steps.get("scaler")
+        if scaler is not None:
+            row_values = scaler.transform(row)[0]
+            default_values = scaler.transform(default_row)[0]
+
+    if hasattr(estimator, "coef_"):
+        weights = np.asarray(estimator.coef_)[0]
+        raw_contributions = weights * (row_values - default_values)
+    elif hasattr(estimator, "feature_importances_"):
+        weights = np.asarray(estimator.feature_importances_)
+        direction = np.sign(row.to_numpy(dtype=float)[0] - default_row.to_numpy(dtype=float)[0])
+        raw_contributions = weights * direction
+    else:
+        return []
+
+    reasons: list[Reason] = []
+    for feature, contribution in zip(feature_columns, raw_contributions, strict=False):
+        if feature in LOW_SIGNAL_EXPLANATION_FEATURES:
+            continue
+        value = round(float(contribution), 4)
+        if value == 0.0:
+            continue
+        text = FEATURE_DESCRIPTIONS.get(feature, f"{feature.replace('_', ' ').title()} moved the trained model.")
+        reasons.append(Reason(feature=feature, contribution=value, text=text))
+    return sorted(reasons, key=lambda reason: abs(reason.contribution), reverse=True)[:top_n]
