@@ -135,6 +135,16 @@ Latest local IPL toss-decision run:
 - Test log loss: 0.7069
 - Compared models: Logistic Regression, HistGradientBoosting, Random Forest
 
+Latest local IPL player-runs run:
+
+- Source: Cricsheet `ipl_csv2.zip`
+- Batter innings: 18,677 rows, 14,941 train rows, 3,736 test rows
+- Feature matrix: 13 historical batter/team/venue columns
+- Best baseline: HistGradientBoosting
+- Test MAE: 16.325 runs
+- Test RMSE: 22.142 runs
+- Compared models: Ridge, HistGradientBoosting, Random Forest
+
 ## Blueprint Status
 
 The repo now contains the complete folder map from the PDF and a working vertical slice across Week 1-12 components. For a serious accuracy claim, train on full historical data with TimeSeriesSplit and log predictions against real results. The app is functional in demo mode immediately; real accuracy depends on downloaded datasets and trained model artifacts.

@@ -48,3 +48,13 @@ class PredictionActualRequest(BaseModel):
     """Resolve a logged prediction with the real outcome."""
 
     actual_value: str = Field(min_length=1, max_length=100)
+
+
+class PlayerRunsRequest(BaseModel):
+    """Predict expected batter runs before an innings."""
+
+    batter: str = "V Kohli"
+    batting_team: str = "Royal Challengers Bangalore"
+    bowling_team: str = "Mumbai Indians"
+    venue: str = "Wankhede Stadium"
+    innings: int = Field(default=1, ge=1, le=2)

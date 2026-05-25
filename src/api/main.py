@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes.accuracy import router as accuracy_router
 from src.api.routes.live import router as live_router
 from src.api.routes.prematch import router as prematch_router
+from src.api.routes.players import router as players_router
 from src.api.websocket import router as websocket_router
 from src.db.database import database_health, initialize_schema
 
@@ -29,6 +30,7 @@ def create_app() -> FastAPI:
     )
     app.include_router(accuracy_router)
     app.include_router(prematch_router)
+    app.include_router(players_router)
     app.include_router(live_router)
     app.include_router(websocket_router)
 
