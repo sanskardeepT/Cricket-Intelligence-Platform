@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Gauge, RefreshCw, ShieldCheck, Trophy } from "lucide-react";
+import { Gauge, RefreshCw, ShieldCheck, Trophy, UserRound } from "lucide-react";
 import BallPredictor from "./components/BallPredictor.jsx";
 import ReasonCard from "./components/ReasonCard.jsx";
 import WinProbChart from "./components/WinProbChart.jsx";
@@ -38,12 +38,31 @@ const fallbackPayload = {
   },
 };
 
+const fallbackToss = {
+  decision: "FIELD",
+  field_score: 71.58,
+  confidence: 0.432,
+  probabilities: { BAT: 0.2842, FIELD: 0.7158 },
+  model_name: "hist_gradient_boosting",
+  source: "trained_artifact",
+};
+
+const fallbackPlayer = {
+  batter: "V Kohli",
+  expected_runs: 20.56,
+  range: { p10: 2.56, p90: 48.56 },
+  model_name: "hist_gradient_boosting",
+  source: "trained_artifact",
+};
+
 function pct(value) {
   return `${Math.round((value ?? 0) * 100)}%`;
 }
 
 export default function App() {
   const [payload, setPayload] = useState(fallbackPayload);
+  const [toss, setToss] = useState(fallbackToss);
+  const [player, setPlayer] = useState(fallbackPlayer);
   const [accuracy, setAccuracy] = useState(null);
   const [history, setHistory] = useState([
     { over: "10", probability: 48 },
@@ -56,6 +75,7 @@ export default function App() {
   const [useWebsocket, setUseWebsocket] = useState(true);
 
   const [loading, setLoading] = useState(false);
+  const [modelLoading, setModelLoading] = useState(false);
 
   async function refresh() {
     setLoading(true);
@@ -93,10 +113,49 @@ export default function App() {
     }
   }
 
+  async function refreshModelPanels() {
+    setModelLoading(true);
+    try {
+      const [tossResponse, playerResponse] = await Promise.all([
+        fetch(`${API_BASE}/prematch/toss`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            venue: "Wankhede Stadium",
+            toss_winner: "Mumbai Indians",
+            venue_dew_factor: 78,
+            pitch_deterioration: 38,
+            captain_field_tendency: 67,
+            chase_success_rate: 64,
+          }),
+        }),
+        fetch(`${API_BASE}/players/runs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            batter: "V Kohli",
+            batting_team: "Royal Challengers Bangalore",
+            bowling_team: "Mumbai Indians",
+            venue: "Wankhede Stadium",
+            innings: 1,
+          }),
+        }),
+      ]);
+      if (tossResponse.ok) setToss(await tossResponse.json());
+      if (playerResponse.ok) setPlayer(await playerResponse.json());
+    } catch {
+      setToss(fallbackToss);
+      setPlayer(fallbackPlayer);
+    } finally {
+      setModelLoading(false);
+    }
+  }
+
 
   useEffect(() => {
     if (!useWebsocket) {
       refresh();
+      refreshModelPanels();
       return;
     }
 
@@ -160,6 +219,10 @@ export default function App() {
       }
     };
   }, [useWebsocket]);
+
+  useEffect(() => {
+    refreshModelPanels();
+  }, []);
 
 
   const match = payload.match_state ?? fallbackPayload.match_state;
@@ -242,6 +305,53 @@ export default function App() {
                 <small>{row.resolved_predictions ?? 0}/{row.total_predictions ?? 0} resolved</small>
               </div>
             ))}
+          </div>
+        </section>
+        <section className="panel model-panel">
+          <div className="panel-heading">
+            <span>Toss Decision</span>
+            <strong>{toss?.decision ?? "FIELD"}</strong>
+          </div>
+          <div className="decision-grid">
+            <div>
+              <span>Field Score</span>
+              <strong>{Math.round(toss?.field_score ?? 0)}%</strong>
+            </div>
+            <div>
+              <span>Confidence</span>
+              <strong>{pct(toss?.confidence ?? 0)}</strong>
+            </div>
+          </div>
+          <div className="source-row">
+            <ShieldCheck size={16} />
+            <span>{toss?.model_name ?? "toss model"} · {toss?.source ?? "fallback"}</span>
+            <button className="mini-button" onClick={refreshModelPanels} type="button" title="Refresh model panels">
+              <RefreshCw size={15} className={modelLoading ? "spin" : ""} />
+            </button>
+          </div>
+        </section>
+        <section className="panel model-panel">
+          <div className="panel-heading">
+            <span>Player Runs</span>
+            <strong>{Math.round(player?.expected_runs ?? 0)}</strong>
+          </div>
+          <div className="player-line">
+            <UserRound size={18} />
+            <span>{player?.batter ?? "Batter"}</span>
+          </div>
+          <div className="decision-grid">
+            <div>
+              <span>P10</span>
+              <strong>{Math.round(player?.range?.p10 ?? 0)}</strong>
+            </div>
+            <div>
+              <span>P90</span>
+              <strong>{Math.round(player?.range?.p90 ?? 0)}</strong>
+            </div>
+          </div>
+          <div className="source-row">
+            <ShieldCheck size={16} />
+            <span>{player?.model_name ?? "player model"} · {player?.source ?? "fallback"}</span>
           </div>
         </section>
       </div>
