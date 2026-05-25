@@ -4,6 +4,7 @@ from src.features.match_features import balls_bowled_from_overs, elo_win_probabi
 from src.features.pressure_index import PressureInputs, pressure_index
 from src.models.monte_carlo import SimulationState, simulate_chase
 from src.db.database import database_health, initialize_schema
+from src.db.database import prediction_accuracy_summary, recent_predictions
 from src.data.ingest import build_delivery_rows, build_match_rows, summarize_source
 from src.features.matrix import build_feature_frame, write_feature_matrices
 from src.models.training import train_baselines
@@ -42,6 +43,8 @@ def test_database_skips_without_url(monkeypatch):
     monkeypatch.delenv("DATABASE_URL", raising=False)
     assert initialize_schema() is False
     assert database_health()["status"] == "not_configured"
+    assert prediction_accuracy_summary()["configured"] is False
+    assert recent_predictions()["configured"] is False
 
 
 def test_ingestion_summary_from_csv(tmp_path):

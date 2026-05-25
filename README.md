@@ -94,6 +94,14 @@ The trainer uses `TimeSeriesSplit`, evaluates Logistic Regression and Random For
 
 When `artifacts/models/win_probability_baseline.joblib` exists, `/live/predict` automatically uses it for live inference. Set `MODEL_ARTIFACT_PATH` to point at a different artifact.
 
+Track real-world prediction accuracy:
+
+```powershell
+curl http://127.0.0.1:8000/accuracy/summary
+curl http://127.0.0.1:8000/accuracy/recent
+curl -X POST http://127.0.0.1:8000/accuracy/predictions/<prediction_id>/actual -H "Content-Type: application/json" -d "{\"actual_value\":\"win\"}"
+```
+
 Latest local IPL baseline run:
 
 - Source: Cricsheet `ipl_csv2.zip`

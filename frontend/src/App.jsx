@@ -44,6 +44,7 @@ function pct(value) {
 
 export default function App() {
   const [payload, setPayload] = useState(fallbackPayload);
+  const [accuracy, setAccuracy] = useState(null);
   const [history, setHistory] = useState([
     { over: "10", probability: 48 },
     { over: "12", probability: 52 },
@@ -59,10 +60,16 @@ export default function App() {
   async function refresh() {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/live/demo`);
+      const [response, accuracyResponse] = await Promise.all([
+        fetch(`${API_BASE}/live/demo`),
+        fetch(`${API_BASE}/accuracy/summary`).catch(() => null),
+      ]);
       if (!response.ok) throw new Error(`API returned ${response.status}`);
       const data = await response.json();
       setPayload(data);
+      if (accuracyResponse?.ok) {
+        setAccuracy(await accuracyResponse.json());
+      }
       const probPercent = Math.round((data.prediction?.probability ?? 0) * 100);
       const overLabel = (() => {
         const ballsBowled = data.match_state?.balls_bowled;
@@ -218,6 +225,21 @@ export default function App() {
               <div key={key}>
                 <span>{key.replaceAll("_", " ")}</span>
                 <strong>{pct(value)}</strong>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section className="panel">
+          <div className="panel-heading">
+            <span>Accuracy Tracking</span>
+            <strong>{accuracy?.configured ? "DB" : "Local"}</strong>
+          </div>
+          <div className="vote-grid">
+            {(accuracy?.summary?.length ? accuracy.summary : [{ pred_type: "live_win_probability", total_predictions: 0, resolved_predictions: 0, accuracy: 0 }]).map((row) => (
+              <div key={row.pred_type}>
+                <span>{row.pred_type.replaceAll("_", " ")}</span>
+                <strong>{Math.round((row.accuracy ?? 0) * 100)}%</strong>
+                <small>{row.resolved_predictions ?? 0}/{row.total_predictions ?? 0} resolved</small>
               </div>
             ))}
           </div>

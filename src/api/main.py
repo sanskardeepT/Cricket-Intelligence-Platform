@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.api.routes.accuracy import router as accuracy_router
 from src.api.routes.live import router as live_router
 from src.api.routes.prematch import router as prematch_router
 from src.api.websocket import router as websocket_router
@@ -26,6 +27,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.include_router(accuracy_router)
     app.include_router(prematch_router)
     app.include_router(live_router)
     app.include_router(websocket_router)

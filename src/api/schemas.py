@@ -41,3 +41,8 @@ class PrematchRequest(BaseModel):
     team_a_form: float = Field(default=62, ge=0, le=100)
     venue_advantage: float = Field(default=58, ge=0, le=100)
 
+
+class PredictionActualRequest(BaseModel):
+    """Resolve a logged prediction with the real outcome."""
+
+    actual_value: str = Field(min_length=1, max_length=100)
