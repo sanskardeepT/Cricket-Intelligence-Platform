@@ -1,63 +1,281 @@
-# Cricket Intelligence Platform
+# 🏏 Cricket Intelligence Platform
 
-Full-stack cricket prediction system for IPL, T20, and ODI match intelligence. It predicts live win probability, toss decision, next-ball outcome, and explains every result with scientific reasons.
+An advanced AI-powered cricket analytics and prediction platform built for IPL, T20, and ODI matches.
+This project combines machine learning, real-time match intelligence, statistical modeling, and explainable AI to predict outcomes with data-backed reasoning instead of random probability guesses.
 
-## What Is Built
+The platform can analyze live match situations, predict win probability, estimate next-ball outcomes, evaluate toss decisions, and explain *why* a prediction was generated using contextual cricket intelligence.
 
-- Data ingestion for Cricsheet IPL/T20/ODI zips.
-- Cleaning pipeline for Kaggle/Cricsheet deliveries.
-- Feature engineering for run rates, ELO, pressure index, player form, H2H, and venue DNA.
-- Model layer for XGBoost, LightGBM, LSTM, Random Forest, Monte Carlo, and Logistic Regression stacking.
-- Explanation layer for SHAP, toss logic, and ball-by-ball reasons.
-- FastAPI backend with `/health`, `/prematch/winner`, `/prematch/toss`, `/live/demo`, `/live/predict`, and `/ws/live`.
-- React dashboard with win probability chart, next-ball predictor, reason cards, and model vote panel.
-- Docker Compose for API, PostgreSQL, and Redis.
+---
 
-## Quick Start
+## 🚀 Why This Project Exists
 
-```powershell
+Most cricket prediction systems only display percentages without explaining the actual match context behind them.
+
+This platform was built to solve that problem by combining:
+
+* Historical cricket datasets
+* Live match momentum analysis
+* Venue behavior patterns
+* Team pressure situations
+* Batter and bowler form
+* Explainable AI reasoning
+
+The goal is to create a realistic cricket intelligence engine that behaves more like an analyst than a basic prediction model.
+
+---
+
+# ✨ Core Features
+
+### 📊 Live Win Probability Prediction
+
+Predicts the winning chances of both teams during live matches using:
+
+* Current score
+* Required run rate
+* Wickets remaining
+* Momentum shifts
+* Venue scoring trends
+* Team strength comparison
+
+---
+
+### 🎯 Next Ball Outcome Prediction
+
+Predicts the probability of:
+
+* Dot Ball
+* Single
+* Double
+* Boundary
+* Six
+* Wicket
+* Extras / Other outcomes
+
+using ball-by-ball match context and player behavior patterns.
+
+---
+
+### 🪙 Toss Decision Intelligence
+
+Analyzes whether teams should:
+
+* Bat first
+* Bowl first
+
+based on:
+
+* Venue history
+* Dew factor
+* Chasing advantage
+* Team composition
+* Historical success rates
+
+---
+
+### 🧠 Explainable AI Layer
+
+Instead of only showing predictions, the system explains:
+
+* Why win probability changed
+* Which factors influenced predictions
+* Match pressure conditions
+* Batter vs bowler matchup impact
+* Momentum shifts
+
+using SHAP explainability and contextual reasoning.
+
+---
+
+### 📈 Advanced Feature Engineering
+
+The platform generates intelligent cricket features including:
+
+* Dynamic Run Rate
+* Required Run Rate
+* Pressure Index
+* Venue DNA
+* Team ELO Ratings
+* Batter Form Index
+* Bowler Economy Trends
+* Head-to-Head Statistics
+* Phase-wise Scoring Patterns
+
+---
+
+# 🛠️ Tech Stack
+
+## Backend
+
+* FastAPI
+* PostgreSQL
+* Redis
+* WebSockets
+* Python
+
+## Frontend
+
+* React
+* Vite
+* Recharts
+
+## Machine Learning
+
+* Scikit-learn
+* XGBoost
+* LightGBM
+* LSTM
+* Monte Carlo Simulation
+* Logistic Regression
+* Random Forest
+
+## DevOps
+
+* Docker
+* Docker Compose
+
+---
+
+# 📂 Project Architecture
+
+```bash
+cricket-intelligence-platform/
+│
+├── src/
+│   ├── api/
+│   ├── data/
+│   ├── features/
+│   ├── models/
+│   ├── explainability/
+│   └── live_engine/
+│
+├── scripts/
+├── data/
+├── artifacts/
+├── frontend/
+└── docker/
+```
+
+---
+
+# ⚡ Quick Start
+
+## 1️⃣ Clone Repository
+
+```bash
+git clone <your-repository-url>
+cd cricket-intelligence-platform
+```
+
+---
+
+## 2️⃣ Create Virtual Environment
+
+```bash
 python -m venv .venv
+```
+
+### Activate Environment (Windows)
+
+```bash
 .\.venv\Scripts\Activate.ps1
+```
+
+---
+
+## 3️⃣ Install Dependencies
+
+```bash
 pip install -r requirements.txt
+```
+
+For full ML model training support:
+
+```bash
+pip install -r requirements-ml.txt
+```
+
+---
+
+## 4️⃣ Run Backend Server
+
+```bash
 uvicorn src.api.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-In another terminal:
+---
 
-```powershell
+## 5️⃣ Run Frontend
+
+Open another terminal:
+
+```bash
 npm install
 npm run dev
 ```
 
-Open the Vite URL, usually `http://127.0.0.1:5173`.
+Frontend usually runs on:
 
-For full training with all heavyweight model libraries:
-
-```powershell
-pip install -r requirements-ml.txt
+```bash
+http://127.0.0.1:5173
 ```
 
-## API Smoke Checks
+---
 
-```powershell
+# 🔍 API Endpoints
+
+| Endpoint           | Description                 |
+| ------------------ | --------------------------- |
+| `/health`          | API health check            |
+| `/prematch/winner` | Pre-match winner prediction |
+| `/prematch/toss`   | Toss decision intelligence  |
+| `/live/demo`       | Demo live prediction        |
+| `/live/predict`    | Real-time match prediction  |
+| `/ws/live`         | WebSocket live updates      |
+
+---
+
+# 🧪 API Smoke Test
+
+```bash
 curl http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/live/demo
 ```
 
-## Database Setup
+---
 
-The API runs without PostgreSQL for demo mode. For real prediction logging and training data storage, start PostgreSQL through Docker Compose:
+# 🗄️ Database Setup
 
-```powershell
+The platform supports running in lightweight demo mode without PostgreSQL.
+
+For full-scale prediction logging and training pipelines:
+
+```bash
 docker compose up -d postgres redis
+```
+
+Set database URL:
+
+```bash
 $env:DATABASE_URL="postgresql://cricket:cricket@localhost:5432/cricket"
+```
+
+Initialize schema:
+
+```bash
 python scripts/init_db.py
+```
+
+Start API:
+
+```bash
 uvicorn src.api.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The schema creates `matches`, `deliveries`, `players`, `player_match_stats`, `venues`, `live_match_state`, and `predictions`. Live prediction requests write to `predictions` when `DATABASE_URL` is configured.
+---
 
-## Real Data Flow
+# 📥 Real Match Data Pipeline
+
+Download and process Cricsheet datasets:
 
 ```python
 from src.data.download import download_cricsheet_dataset
@@ -65,99 +283,193 @@ from src.data.preprocessor import load_cricsheet_zip, save_processed_deliveries
 
 zip_path = download_cricsheet_dataset("ipl")
 deliveries = load_cricsheet_zip(zip_path)
-save_processed_deliveries(deliveries, "data/processed/ipl_deliveries.csv")
+
+save_processed_deliveries(
+    deliveries,
+    "data/processed/ipl_deliveries.csv"
+)
 ```
 
-Validate and load data into PostgreSQL:
+---
 
-```powershell
+# 📦 Data Ingestion
+
+Validate dataset:
+
+```bash
 python scripts/ingest_data.py data/processed/ipl_deliveries.csv --dry-run
-$env:DATABASE_URL="postgresql://cricket:cricket@localhost:5432/cricket"
+```
+
+Load into PostgreSQL:
+
+```bash
 python scripts/ingest_data.py data/processed/ipl_deliveries.csv --format IPL
 ```
 
-Build model feature matrices with chronological train/test ordering:
+---
 
-```powershell
+# 🧬 Feature Generation
+
+Generate training datasets:
+
+```bash
 python scripts/build_features.py data/processed/ipl_deliveries.csv --output-dir data/features
 ```
 
-This writes `X_train.csv`, `X_test.csv`, `y_train.csv`, `y_test.csv`, and `metadata.csv`.
+Generated outputs include:
 
-Generated data and model artifacts are intentionally ignored by Git. To publish the local artifacts to Kaggle:
+* X_train.csv
+* X_test.csv
+* y_train.csv
+* y_test.csv
+* metadata.csv
 
-```powershell
-python scripts/prepare_kaggle_dataset.py
-kaggle datasets create -p kaggle/cricket-intelligence-platform-ipl-artifacts
-```
+---
 
-To restore artifacts from Kaggle on another machine after the dataset exists:
+# 🤖 Model Training
 
-```powershell
-python scripts/download_kaggle_artifacts.py
-```
+Train baseline models:
 
-Train baseline win-probability models:
-
-```powershell
+```bash
 python scripts/train_baseline.py --feature-dir data/features --artifact-dir artifacts/models
 ```
 
-The trainer uses `TimeSeriesSplit`, evaluates Logistic Regression, Random Forest, native Gradient Boosting, and optional XGBoost/LightGBM when installed, then saves the best local artifact to `artifacts/models/`.
+The training pipeline evaluates:
 
-When `artifacts/models/win_probability_baseline.joblib` exists, `/live/predict` automatically uses it for live inference. Set `MODEL_ARTIFACT_PATH` to point at a different artifact.
+* Logistic Regression
+* Random Forest
+* HistGradientBoosting
+* XGBoost
+* LightGBM
 
-Track real-world prediction accuracy:
+using chronological train-test splitting for realistic cricket forecasting.
 
-```powershell
+---
+
+# 📊 Latest IPL Model Performance
+
+## 🏆 Win Probability Model
+
+| Metric     | Result              |
+| ---------- | ------------------- |
+| Dataset    | Cricsheet IPL       |
+| Matches    | 1,233               |
+| Deliveries | 293,308             |
+| Best Model | Logistic Regression |
+| Accuracy   | 68.26%              |
+| ROC-AUC    | 0.7673              |
+| Log Loss   | 0.5714              |
+
+### Compared Models
+
+* Logistic Regression
+* Random Forest
+* HistGradientBoosting
+* XGBoost
+* LightGBM
+
+---
+
+## 🎯 Next Ball Outcome Model
+
+| Metric     | Result               |
+| ---------- | -------------------- |
+| Best Model | HistGradientBoosting |
+| Accuracy   | 43.76%               |
+| Log Loss   | 1.4879               |
+
+Predicted classes:
+
+* Dot Ball
+* Single
+* Two Runs
+* Four
+* Six
+* Wicket
+* Other Runs
+
+---
+
+## 🪙 Toss Decision Model
+
+| Metric     | Result               |
+| ---------- | -------------------- |
+| Best Model | HistGradientBoosting |
+| Accuracy   | 76.92%               |
+| Log Loss   | 0.7069               |
+
+---
+
+## 🧑‍🏏 Player Runs Prediction
+
+| Metric     | Result               |
+| ---------- | -------------------- |
+| Best Model | HistGradientBoosting |
+| MAE        | 16.325               |
+| RMSE       | 22.142               |
+
+---
+
+# 📡 Live Prediction Tracking
+
+Track prediction accuracy over time:
+
+```bash
 curl http://127.0.0.1:8000/accuracy/summary
 curl http://127.0.0.1:8000/accuracy/recent
-curl -X POST http://127.0.0.1:8000/accuracy/predictions/<prediction_id>/actual -H "Content-Type: application/json" -d "{\"actual_value\":\"win\"}"
 ```
 
-Latest local IPL baseline run:
+Update actual outcomes:
 
-- Source: Cricsheet `ipl_csv2.zip`
-- Processed deliveries: 293,308 rows across 1,233 matches
-- Feature matrix: 36 columns, 234,646 train rows, 58,662 test rows
-- Best baseline: Logistic Regression
-- Test accuracy: 68.26%
-- Test ROC-AUC: 0.7673
-- Test log loss: 0.5714
-- Compared models: Logistic Regression, Random Forest, HistGradientBoosting, XGBoost, LightGBM
-- XGBoost test accuracy: 67.96%, ROC-AUC: 0.7599
-- LightGBM test accuracy: 67.33%, ROC-AUC: 0.7526
+```bash
+curl -X POST http://127.0.0.1:8000/accuracy/predictions/<prediction_id>/actual \
+-H "Content-Type: application/json" \
+-d "{\"actual_value\":\"win\"}"
+```
 
-Latest local IPL next-ball outcome run:
+---
 
-- Source: Cricsheet `ipl_csv2.zip`
-- Outcome classes: Dot ball, Single, Two runs, Four, Six, Wicket, Other runs
-- Feature matrix: 20 pre-ball columns, 234,646 train rows, 58,662 test rows
-- Best baseline: HistGradientBoosting
-- Test accuracy: 43.76%
-- Test log loss: 1.4879
-- Compared models: Logistic Regression, HistGradientBoosting, Random Forest
+# 🧠 Future Roadmap
 
-Latest local IPL toss-decision run:
+Planned improvements:
 
-- Source: Cricsheet `ipl_csv2.zip` match-info files
-- Matches: 1,233 IPL matches, 986 train rows, 247 test rows
-- Feature matrix: 7 toss/venue/captain prior columns
-- Best baseline: HistGradientBoosting
-- Test accuracy: 76.92%
-- Test log loss: 0.7069
-- Compared models: Logistic Regression, HistGradientBoosting, Random Forest
+* Real-time IPL streaming integration
+* Player fatigue modeling
+* Fantasy cricket recommendation engine
+* AI commentary generation
+* Graph Neural Networks for player relationships
+* Multi-league support (BBL, PSL, CPL)
+* Mobile application
+* Reinforcement learning-based strategy engine
 
-Latest local IPL player-runs run:
+---
 
-- Source: Cricsheet `ipl_csv2.zip`
-- Batter innings: 18,677 rows, 14,941 train rows, 3,736 test rows
-- Feature matrix: 13 historical batter/team/venue columns
-- Best baseline: HistGradientBoosting
-- Test MAE: 16.325 runs
-- Test RMSE: 22.142 runs
-- Compared models: Ridge, HistGradientBoosting, Random Forest
+# 📌 Vision
 
-## Blueprint Status
+The long-term vision is to build a complete AI-powered cricket intelligence ecosystem capable of:
 
-The repo now contains the complete folder map from the PDF and a working vertical slice across Week 1-12 components. For a serious accuracy claim, train on full historical data with TimeSeriesSplit and log predictions against real results. The app is functional in demo mode immediately; real accuracy depends on downloaded datasets and trained model artifacts.
+* Real-time analytics
+* Match simulations
+* Tactical recommendations
+* Fantasy insights
+* Predictive commentary
+* Deep cricket intelligence for fans, analysts, and teams
+
+---
+
+# 📄 License
+
+This project is built for educational, research, and analytical purposes.
+
+---
+
+# ⭐ Support
+
+If you found this project useful:
+
+* Star the repository
+* Fork the project
+* Contribute improvements
+* Share feedback
+
+Cricket + AI is just getting started 🚀
